@@ -1,5 +1,4 @@
-# app.py - Generated from your notebook structure
-
+import os
 import gradio as gr
 import pandas as pd
 import numpy as np
@@ -42,14 +41,13 @@ def interface_app():
 
         arquivo = gr.File(label="Envie seu arquivo CSV", file_types=[".csv"])
         botao_carregar = gr.Button("Carregar Dados")
-        saída_df = gr.Dataframe(label="Prévia dos Dados")
+        saida_df = gr.Dataframe(label="Prévia dos Dados")
 
         coluna_x = gr.Textbox(label="Nome da coluna X")
         coluna_y = gr.Textbox(label="Nome da coluna Y")
         botao_reg = gr.Button("Rodar Regressão Linear")
         saida_reg = gr.Textbox(label="Resultado")
 
-        # Lógica dos botões
         botao_carregar.click(fn=carregar_csv, inputs=arquivo, outputs=saida_df)
         botao_reg.click(fn=regressao_linear, inputs=[saida_df, coluna_x, coluna_y], outputs=saida_reg)
 
@@ -57,5 +55,6 @@ def interface_app():
 
 
 if __name__ == "__main__":
+    porta = int(os.environ.get("PORT", 8080))
     interface = interface_app()
-    interface.launch(server_name="0.0.0.0", server_port=8080)
+    interface.launch(server_name="0.0.0.0", server_port=porta)
