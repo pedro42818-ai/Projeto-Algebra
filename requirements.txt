@@ -2,3 +2,7 @@ pandas
 numpy
 scikit-learn
 gradio
+matplotlib
+pillow
+fastapi
+uvicorn
