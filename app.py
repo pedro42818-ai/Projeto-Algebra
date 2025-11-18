@@ -18,8 +18,11 @@ def carregar_csv(arquivo):
 
 def regressao_linear(df, coluna_x, coluna_y):
     try:
+        df = pd.DataFrame(df)  # <<< IMPORTANTE!
+
         X = df[[coluna_x]].values
         y = df[coluna_y].values
+
         modelo = LinearRegression()
         modelo.fit(X, y)
 
@@ -32,7 +35,7 @@ def regressao_linear(df, coluna_x, coluna_y):
 
 
 # ==========================
-# Interface Gradio (Frontend)
+# Interface Gradio
 # ==========================
 
 def interface_app():
@@ -41,7 +44,7 @@ def interface_app():
 
         arquivo = gr.File(label="Envie seu arquivo CSV", file_types=[".csv"])
         botao_carregar = gr.Button("Carregar Dados")
-        saida_df = gr.Dataframe(label="Prévia dos Dados")
+        saida_df = gr.Dataframe(label="Prévia dos Dados", interactive=True)
 
         coluna_x = gr.Textbox(label="Nome da coluna X")
         coluna_y = gr.Textbox(label="Nome da coluna Y")
@@ -57,4 +60,9 @@ def interface_app():
 if __name__ == "__main__":
     porta = int(os.environ.get("PORT", 8080))
     interface = interface_app()
-    interface.launch(server_name="0.0.0.0", server_port=porta)
+    interface.queue().launch(
+        server_name="0.0.0.0",
+        server_port=porta,
+        inbrowser=False,
+        show_error=True
+    )
