@@ -3,9 +3,10 @@ import gradio as gr
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
+from fastapi import FastAPI
 
 # ==========================
-# Funções de processamento
+# Funções
 # ==========================
 
 def carregar_csv(arquivo):
@@ -15,11 +16,9 @@ def carregar_csv(arquivo):
     except Exception as e:
         return f"Erro ao carregar CSV: {e}"
 
-
 def regressao_linear(df, coluna_x, coluna_y):
     try:
-        df = pd.DataFrame(df)  # <<< IMPORTANTE!
-
+        df = pd.DataFrame(df)  # Corrige entrada do Gradio
         X = df[[coluna_x]].values
         y = df[coluna_y].values
 
@@ -31,11 +30,10 @@ def regressao_linear(df, coluna_x, coluna_y):
 
         return f"Equação: y = {a:.4f}x + {b:.4f}"
     except Exception as e:
-        return f"Erro na regressão linear: {e}"
-
+        return f"Erro: {e}"
 
 # ==========================
-# Interface Gradio
+# Interface
 # ==========================
 
 def interface_app():
@@ -44,25 +42,34 @@ def interface_app():
 
         arquivo = gr.File(label="Envie seu arquivo CSV", file_types=[".csv"])
         botao_carregar = gr.Button("Carregar Dados")
-        saida_df = gr.Dataframe(label="Prévia dos Dados", interactive=True)
+        saida_df = gr.Dataframe(label="Prévia dos Dados")
 
-        coluna_x = gr.Textbox(label="Nome da coluna X")
-        coluna_y = gr.Textbox(label="Nome da coluna Y")
-        botao_reg = gr.Button("Rodar Regressão Linear")
+        coluna_x = gr.Textbox(label="Coluna X")
+        coluna_y = gr.Textbox(label="Coluna Y")
+        botao_reg = gr.Button("Rodar Regressão")
         saida_reg = gr.Textbox(label="Resultado")
 
-        botao_carregar.click(fn=carregar_csv, inputs=arquivo, outputs=saida_df)
-        botao_reg.click(fn=regressao_linear, inputs=[saida_df, coluna_x, coluna_y], outputs=saida_reg)
+        botao_carregar.click(carregar_csv, arquivo, saida_df)
+        botao_reg.click(regressao_linear, [saida_df, coluna_x, coluna_y], saida_reg)
 
     return demo
 
+# ==========================
+# FastAPI + Gradio
+# ==========================
+
+app = FastAPI()
+
+gradio_interface = interface_app()
+
+# monta o gradio dentro do fastapi
+app = gr.mount_gradio_app(app, gradio_interface, path="/")
+
+# ==========================
+# Execução local (não usada no Render)
+# ==========================
 
 if __name__ == "__main__":
+    import uvicorn
     porta = int(os.environ.get("PORT", 8080))
-    interface = interface_app()
-    interface.queue().launch(
-        server_name="0.0.0.0",
-        server_port=porta,
-        inbrowser=False,
-        show_error=True
-    )
+    uvicorn.run(app, host="0.0.0.0", port=porta)
